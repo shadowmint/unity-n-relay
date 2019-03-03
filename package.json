@@ -1,0 +1,27 @@
+{
+  "name": "unity-n-relay",
+  "version": "0.0.1",
+  "description": "n-relay",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shadowmint/unity-n-relay.git"
+  },
+  "files": [
+    "index.js",
+    "scripts",
+    "src"
+  ],
+  "author": "douglas.linder@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/shadowmint/unity-n-relay/issues"
+  },
+  "homepage": "https://github.com/shadowmint/unity-n-relay",
+  "scripts": {
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "dependencies": {
+    "unity-n-promises": "github:shadowmint/unity-n-promises"
+  }
+}
