@@ -6,6 +6,9 @@ This is a unity client for the relay project.
 
 TODO...
 
+You have to have a copy of [Relay](https://github.com/shadowmint/relay) running for this to connect to.
+
+
 ## Install
 
 From your unity project folder:
