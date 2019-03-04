@@ -74,11 +74,11 @@ namespace N.Package.Relay
         private async Task InitializeMaster()
         {
             // Request initialization
-            var deferred = new RelayDeferredTransaction(_options.TransactionTimeout);
+            var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             await _eventStream.Send(new InitializeMaster()
             {
                 transaction_id = deferred.TransactionId,
-                metadata = _options.Metadata
+                metadata = _options.metadata
             });
 
             // Wait for response
@@ -108,7 +108,7 @@ namespace N.Package.Relay
 
             // Send
             var output = _serializer.Serialize(data);
-            var deferred = new RelayDeferredTransaction(_options.TransactionTimeout);
+            var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             await _eventStream.Send(new MessageToClient()
             {
                 transaction_id = deferred.TransactionId,

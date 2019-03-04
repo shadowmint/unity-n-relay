@@ -8,11 +8,11 @@ namespace N.Package.Relay
     public interface IRelayMasterEventHandler
     {
         void OnDisconnected();
-        void OnError(Exception relayEventError);
-        void OnWarning(RelayException relayException, string s);
-        void OnMessage(MessageFromClient messageFromClient);
-        void OnClientConnected(ClientJoined clientJoined);
-        void OnClientDisconnected(ClientDisconnected clientDisconnected);
+        void OnError(Exception error);
+        void OnWarning(RelayException error, string message);
+        void OnMessage(MessageFromClient message);
+        void OnClientConnected(ClientJoined message);
+        void OnClientDisconnected(ClientDisconnected message);
         void OnConnected();
     }
 }

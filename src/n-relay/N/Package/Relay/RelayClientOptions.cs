@@ -4,15 +4,16 @@ using N.Package.WebSocket;
 
 namespace N.Package.Relay
 {
+    [System.Serializable]
     public class RelayClientOptions : WebSocketConnectionOptions
     {
-        public TimeSpan TransactionTimeout = TimeSpan.FromSeconds(10);
-        
-        public ClientMetadata Metadata { get; set; }
+        public TimeSpan transactionTimeout = TimeSpan.FromSeconds(10);
+
+        public ClientMetadata metadata;
 
         /// <summary>
         /// The session to join
         /// </summary>
-        public string SessionId { get; set; }
+        public string sessionId;
     }
 }

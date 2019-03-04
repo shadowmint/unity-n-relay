@@ -62,11 +62,11 @@ namespace N.Package.Relay
         private async Task InitializeClient()
         {
             // Request initialization
-            var deferred = new RelayDeferredTransaction(_options.TransactionTimeout);
+            var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             await _eventStream.Send(new InitializeClient()
             {
                 transaction_id = deferred.TransactionId,
-                metadata = _options.Metadata
+                metadata = _options.metadata
             });
 
             // Wait for response
@@ -81,11 +81,11 @@ namespace N.Package.Relay
             }
 
             // Try to join a session
-            deferred = new RelayDeferredTransaction(_options.TransactionTimeout);
+            deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             await _eventStream.Send(new Join()
             {
                 transaction_id = deferred.TransactionId,
-                session_id = _options.SessionId
+                session_id = _options.sessionId
             });
 
             // Wait for response
@@ -114,7 +114,7 @@ namespace N.Package.Relay
 
             // Send
             var output = _serializer.Serialize(data);
-            var deferred = new RelayDeferredTransaction(_options.TransactionTimeout);
+            var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             await _eventStream.Send(new MessageFromClient()
             {
                 transaction_id = deferred.TransactionId,
