@@ -75,6 +75,7 @@ namespace N.Package.Relay
         {
             // Request initialization
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredTask = _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new InitializeMaster()
             {
                 transaction_id = deferred.TransactionId,
@@ -84,7 +85,7 @@ namespace N.Package.Relay
             // Wait for response
             try
             {
-                await _transactionManager.WaitFor(deferred);
+                await deferredTask;
             }
             catch (Exception error)
             {
@@ -109,6 +110,7 @@ namespace N.Package.Relay
             // Send
             var output = _serializer.Serialize(data);
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredTask = _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new MessageToClient()
             {
                 transaction_id = deferred.TransactionId,
@@ -117,7 +119,7 @@ namespace N.Package.Relay
             });
 
             // Wait for confirmation
-            await _transactionManager.WaitFor(deferred);
+            await deferredTask;
         }
 
         /// <summary>

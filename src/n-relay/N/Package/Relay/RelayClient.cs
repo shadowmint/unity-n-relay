@@ -9,6 +9,7 @@ using N.Package.Relay.Infrastructure.Events;
 using N.Package.Relay.Infrastructure.EventStream;
 using N.Package.Relay.Infrastructure.Model;
 using N.Package.Relay.Infrastructure.TransactionManager;
+using UnityEngine;
 using MessageFromClient = N.Package.Relay.Events.Client.Out.MessageFromClient;
 using MessageToClient = N.Package.Relay.Events.Client.In.MessageToClient;
 
@@ -63,6 +64,7 @@ namespace N.Package.Relay
         {
             // Request initialization
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredTask = _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new InitializeClient()
             {
                 transaction_id = deferred.TransactionId,
@@ -72,7 +74,7 @@ namespace N.Package.Relay
             // Wait for response
             try
             {
-                await _transactionManager.WaitFor(deferred);
+                await deferredTask;
             }
             catch (Exception error)
             {
@@ -82,6 +84,7 @@ namespace N.Package.Relay
 
             // Try to join a session
             deferred = new RelayDeferredTransaction(_options.transactionTimeout);
+            deferredTask = _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new Join()
             {
                 transaction_id = deferred.TransactionId,
@@ -91,7 +94,7 @@ namespace N.Package.Relay
             // Wait for response
             try
             {
-                await _transactionManager.WaitFor(deferred);
+                await deferredTask;
             }
             catch (Exception error)
             {
@@ -115,6 +118,7 @@ namespace N.Package.Relay
             // Send
             var output = _serializer.Serialize(data);
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredTask =  _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new MessageFromClient()
             {
                 transaction_id = deferred.TransactionId,
@@ -122,7 +126,7 @@ namespace N.Package.Relay
             });
 
             // Wait for confirmation
-            await _transactionManager.WaitFor(deferred);
+            await deferredTask;
         }
 
         /// <summary>

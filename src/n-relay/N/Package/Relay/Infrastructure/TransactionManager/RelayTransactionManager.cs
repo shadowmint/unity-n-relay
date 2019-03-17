@@ -17,6 +17,15 @@ namespace N.Package.Relay.Infrastructure.TransactionManager
 
         private bool _active;
 
+        /// <summary>
+        /// Notice that the transaction manager can only respond to transactions which are pending.
+        /// So in order for a request to be resolved, you must spool it using WaitFor *before* running
+        /// the task that will generate a resolved transaction.
+        ///
+        /// Otherwise, you may end up in some situations waiting forever, because the result has been
+        /// received before WaitFor() has even been called; the transaction manager does *not* buffer
+        /// unknown transactions, it just discards them. 
+        /// </summary>
         public Task WaitFor(RelayDeferredTransaction transaction)
         {
             lock (_pending)
@@ -30,7 +39,12 @@ namespace N.Package.Relay.Infrastructure.TransactionManager
         {
             lock (_pending)
             {
-                if (!_pending.ContainsKey(result.transaction_id)) return;
+                if (!_pending.ContainsKey(result.transaction_id))
+                {
+                    Debug.LogWarning($"Unknown transaction {result.transaction_id} discarded. Did you use WaitFor correctly?");
+                    return;
+                }
+
                 var transaction = _pending[result.transaction_id];
                 _pending.Remove(transaction.TransactionId);
                 transaction.Resolve(result);
