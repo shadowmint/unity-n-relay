@@ -9,6 +9,7 @@ namespace N.Package.Relay.Infrastructure
         TransactionTimeout,
         InvalidObjectState,
         InvalidConfiguration,
+        AuthFailed,
         InitializationFailed,
         Disconnected,
         InvalidEvent,

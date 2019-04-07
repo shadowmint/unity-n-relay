@@ -33,6 +33,8 @@ namespace N.Package.Relay
 
         private readonly RelaySerializationHelper _serializer;
 
+        private readonly RelayAuthService _auth;
+
         /// <summary>
         /// The set of currently connected clients
         /// </summary>
@@ -43,6 +45,7 @@ namespace N.Package.Relay
             _eventHandler = eventHandler;
             _transactionManager = transactionManager;
             _serializer = new RelaySerializationHelper();
+            _auth = new RelayAuthService();
         }
 
         /// <summary>
@@ -73,6 +76,29 @@ namespace N.Package.Relay
         /// <returns></returns>
         private async Task InitializeMaster()
         {
+            // Auth
+            var deferredAuth = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredAuthTask = _transactionManager.WaitFor(deferredAuth);
+            await _eventStream.Send(new Auth()
+            {
+                transaction_id = deferredAuth.TransactionId,
+                request = _auth.GenerateAuthRequest(
+                    deferredAuth.TransactionId,
+                    _options.auth.sessionLength,
+                    _options.auth.authKey,
+                    _options.auth.authSecret),
+            });
+
+            // Wait for response
+            try
+            {
+                await deferredAuthTask;
+            }
+            catch (Exception error)
+            {
+                _eventHandler.OnError(new RelayException(RelayErrorCode.InitializationFailed, error));
+            }
+
             // Request initialization
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             var deferredTask = _transactionManager.WaitFor(deferred);

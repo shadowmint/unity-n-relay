@@ -11,7 +11,7 @@ namespace WsTest
         public string remote = "localhost:9977";
 
         public string id = "Client 1";
-        
+
         public bool isActive;
 
         public float elapsed;
@@ -27,10 +27,16 @@ namespace WsTest
                 _service = new ServiceClient();
                 _service.Start(remote, new RelayClientOptions()
                     {
-                        SessionId = "HelloWorld",
-                        Metadata = new ClientMetadata()
+                        sessionId = "HelloWorld",
+                        metadata = new ClientMetadata()
                         {
                             name = id
+                        },
+                        auth = new RelayAuthOptions()
+                        {
+                            authKey = "key1234567890",
+                            authSecret = "secret1234567890",
+                            sessionLength = 1800
                         }
                     })
                     .Promise()

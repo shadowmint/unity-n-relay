@@ -11,6 +11,8 @@ namespace N.Package.Relay
 
         public ClientMetadata metadata;
 
+        public RelayAuthOptions auth;
+        
         /// <summary>
         /// The session to join
         /// </summary>

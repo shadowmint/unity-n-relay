@@ -23,10 +23,16 @@ namespace WsTest
                 _service.Start(remote, new RelayMasterOptions()
                     {
                         ConnectionTimeout = TimeSpan.FromSeconds(10),
-                        Metadata = new MasterMetadata()
+                        metadata = new MasterMetadata()
                         {
                             master_id = "HelloWorld",
                             max_clients = 2
+                        },
+                        auth = new RelayAuthOptions()
+                        {
+                            authKey = "key1234567890",
+                            authSecret = "secret1234567890",
+                            sessionLength = 1800
                         }
                     })
                     .Promise()
