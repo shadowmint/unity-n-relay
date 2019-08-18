@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using N.Package.Relay.Infrastructure.Events;
 using N.Package.WebSocket;
+using UnityEngine;
 
 namespace N.Package.Relay.Infrastructure.EventStream
 {
@@ -93,7 +94,7 @@ namespace N.Package.Relay.Infrastructure.EventStream
             {
                 EventType = RelayEventType.Error,
                 Error = error
-            });
+            }, true);
         }
 
         private async Task TriggerRelayEvent(string raw)
@@ -106,7 +107,7 @@ namespace N.Package.Relay.Infrastructure.EventStream
             });
         }
 
-        private async Task Trigger(RelayEvent relayEvent)
+        private async Task Trigger(RelayEvent relayEvent, bool isError = false)
         {
             try
             {
@@ -118,13 +119,10 @@ namespace N.Package.Relay.Infrastructure.EventStream
             }
             catch (Exception error)
             {
-                try
+                // Just ignore it, we tried to raise it already
+                if (!isError)
                 {
                     await TriggerError(error);
-                }
-                catch (Exception)
-                {
-                    // Just ignore it, we tried to raise it already
                 }
             }
         }

@@ -27,11 +27,14 @@ namespace N.Package.Relay
 
         private readonly RelaySerializationHelper _serializer;
 
+        private readonly RelayAuthService _auth;
+
         public RelayClient(IRelayClientEventHandler eventHandler, RelayTransactionManager transactionManager)
         {
             _eventHandler = eventHandler;
             _transactionManager = transactionManager;
             _serializer = new RelaySerializationHelper();
+            _auth = new RelayAuthService();
         }
 
         /// <summary>
@@ -62,6 +65,29 @@ namespace N.Package.Relay
         /// <returns></returns>
         private async Task InitializeClient()
         {
+            // Auth
+            var deferredAuth = new RelayDeferredTransaction(_options.transactionTimeout);
+            var deferredAuthTask = _transactionManager.WaitFor(deferredAuth);
+            await _eventStream.Send(new Auth()
+            {
+                transaction_id = deferredAuth.TransactionId,
+                request = _auth.GenerateAuthRequest(
+                    deferredAuth.TransactionId,
+                    _options.auth.sessionLength,
+                    _options.auth.authKey,
+                    _options.auth.authSecret),
+            });
+
+            // Wait for response
+            try
+            {
+                await deferredAuthTask;
+            }
+            catch (Exception error)
+            {
+                _eventHandler.OnError(new RelayException(RelayErrorCode.InitializationFailed, error));
+            }
+
             // Request initialization
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             var deferredTask = _transactionManager.WaitFor(deferred);
@@ -99,6 +125,7 @@ namespace N.Package.Relay
             catch (Exception error)
             {
                 _eventHandler.OnError(new RelayException(RelayErrorCode.InitializationFailed, error));
+                return;
             }
 
             // Finally, we're connected
@@ -118,7 +145,7 @@ namespace N.Package.Relay
             // Send
             var output = _serializer.Serialize(data);
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
-            var deferredTask =  _transactionManager.WaitFor(deferred);
+            var deferredTask = _transactionManager.WaitFor(deferred);
             await _eventStream.Send(new MessageFromClient()
             {
                 transaction_id = deferred.TransactionId,
