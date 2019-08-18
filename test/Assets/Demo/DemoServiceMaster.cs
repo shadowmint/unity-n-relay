@@ -6,6 +6,8 @@ using N.Package.Promises;
 using N.Package.Relay;
 using N.Package.Relay.Events.Master.In;
 using UnityEngine;
+using UnityEngine.Networking;
+using NetworkConnection = N.Package.Network.NetworkConnection;
 using Object = UnityEngine.Object;
 
 namespace Demo

@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using N.Package.Network;
+using N.Package.Network.Infrastructure;
 using UnityEngine;
 
 namespace Demo
@@ -21,6 +22,16 @@ namespace Demo
                 var config = Object.FindObjectOfType<DemoConfig>();
                 return Task.FromResult(config.remoteUrl);
             }
+        }
+
+        public async Task Connect(INetworkMaster master)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public async Task Connect(INetworkClient client)
+        {
+            throw new System.NotImplementedException();
         }
     }
 }
