@@ -1,6 +1,9 @@
 using System.Threading.Tasks;
+using Demo.Network;
 using N.Package.Network;
 using N.Package.Network.Infrastructure;
+using N.Package.Relay;
+using N.Package.Relay.Infrastructure.TransactionManager;
 using UnityEngine;
 
 namespace Demo
@@ -9,9 +12,9 @@ namespace Demo
     {
         protected override Task Configure()
         {
-            Register(NetworkCommandType.FromClient, new NetworkCommandHandler());
-            Register(NetworkCommandType.FromMaster, new NetworkCommandHandler());
-            Register(NetworkCommandType.FromAny, new NetworkCommandHandler());
+            Register(NetworkCommandType.FromClient, new DemoRpcMessageHandler());
+            //   Register(NetworkCommandType.FromMaster, new NetworkCommandHandler());
+//            Register(NetworkCommandType.FromAny, new NetworkCommandHandler());
             return Task.CompletedTask;
         }
 
@@ -22,16 +25,6 @@ namespace Demo
                 var config = Object.FindObjectOfType<DemoConfig>();
                 return Task.FromResult(config.remoteUrl);
             }
-        }
-
-        public async Task Connect(INetworkMaster master)
-        {
-            throw new System.NotImplementedException();
-        }
-
-        public async Task Connect(INetworkClient client)
-        {
-            throw new System.NotImplementedException();
         }
     }
 }

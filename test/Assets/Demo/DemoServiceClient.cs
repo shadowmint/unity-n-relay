@@ -19,6 +19,8 @@ namespace Demo
             _clientId = clientId;
         }
 
+        public Guid Identity { get; set; }
+        
         public NetworkConnection NetworkConnection { get; set; }
 
         public Task<RelayClientOptions> ClientOptions

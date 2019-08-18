@@ -1,9 +1,10 @@
 using System;
+using N.Package.Network;
 
 namespace Demo.Network
 {
     [Serializable]
-    public class DemoRpcSetUsernameResponse
+    public class DemoRpcSetUsernameResponse : NetworkCommand
     {
         public bool success;
         public string errorMessage;

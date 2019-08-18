@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Demo.Network;
@@ -16,6 +17,8 @@ namespace Demo
     {
         private readonly List<string> _clients = new List<string>();
 
+        public Guid Identity { get; set; }
+        
         public NetworkConnection NetworkConnection { get; set; }
 
         public Task<RelayMasterOptions> MasterOptions
@@ -54,7 +57,7 @@ namespace Demo
             {
                 state = DemoRpcClientState.AllowInput
             });
-            await NetworkConnection.Execute<DemoRpcMessage, DemoRpcMessageResponse>(new DemoRpcMessage()
+            await NetworkConnection.Execute<DemoRpcMessageHandler.DemoRpcMessage, DemoRpcMessageHandler.DemoRpcMessageResponse>(new DemoRpcMessageHandler.DemoRpcMessage()
             {
                 message = "Welcome to server!"
             });
