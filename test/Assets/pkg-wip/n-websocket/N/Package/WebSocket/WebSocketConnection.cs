@@ -60,9 +60,7 @@ namespace N.Package.WebSocket
 
             using (var cts = new CancellationTokenSource(_options.ConnectionTimeout))
             {
-                Debug.Log($"Connecting? with timeout: {_options.ConnectionTimeout}");
                 await _client.ConnectAsync(new Uri(remote), cts.Token);
-                Debug.Log("Done");
             }
 
             _state = WebSocketConnectionState.Open;
