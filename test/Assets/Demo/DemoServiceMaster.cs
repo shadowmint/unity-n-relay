@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Demo.Network;
 using N.Package.Network;
-using N.Package.Promises;
 using N.Package.Relay;
 using N.Package.Relay.Events.Master.In;
 using UnityEngine;
-using UnityEngine.Networking;
 using NetworkConnection = N.Package.Network.NetworkConnection;
 using Object = UnityEngine.Object;
 
@@ -18,7 +16,7 @@ namespace Demo
         private readonly List<string> _clients = new List<string>();
 
         public Guid Identity { get; set; }
-        
+
         public NetworkConnection NetworkConnection { get; set; }
 
         public Task<RelayMasterOptions> MasterOptions
@@ -57,10 +55,11 @@ namespace Demo
             {
                 state = DemoRpcClientState.AllowInput
             });
-            await NetworkConnection.Execute<DemoRpcMessageHandler.DemoRpcMessage, DemoRpcMessageHandler.DemoRpcMessageResponse>(new DemoRpcMessageHandler.DemoRpcMessage()
-            {
-                message = "Welcome to server!"
-            });
+            await NetworkConnection.Execute<DemoRpcMessageHandler.DemoRpcMessage, DemoRpcMessageHandler.DemoRpcMessageResponse>(
+                new DemoRpcMessageHandler.DemoRpcMessage()
+                {
+                    message = "Welcome to server!"
+                });
         }
     }
 }

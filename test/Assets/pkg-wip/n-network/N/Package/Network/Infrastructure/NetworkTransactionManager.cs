@@ -1,16 +1,19 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using N.Package.Promises;
+using N.Package.Relay.Infrastructure;
 using N.Package.Relay.Infrastructure.Model;
+using N.Package.Relay.Infrastructure.TransactionManager;
 using UnityEngine;
 
-namespace N.Package.Relay.Infrastructure.TransactionManager
+namespace N.Package.Network
 {
-    public class RelayTransactionManager
+    public class NetworkTransactionManager : IDisposable
     {
-        private readonly Dictionary<string, RelayDeferredTransaction> _pending = new Dictionary<string, RelayDeferredTransaction>();
+        private readonly Dictionary<string, INetworkTransactionDeferred> _pending = new Dictionary<string, INetworkTransactionDeferred>();
 
         private bool _active;
 
@@ -20,31 +23,32 @@ namespace N.Package.Relay.Infrastructure.TransactionManager
         /// the task that will generate a resolved transaction.
         ///
         /// Otherwise, you may end up in some situations waiting forever, because the result has been
-        /// received before WaitFor() has even been called; the transaction manager does *not* buffer
+        /// received before Register() has even been called; the transaction manager does *not* buffer
         /// unknown transactions, it just discards them. 
         /// </summary>
-        public Task WaitFor(RelayDeferredTransaction transaction)
+        public void Register<TRequest, TResult>(NetworkTransactionDeferred<TRequest, TResult> transaction)
+            where TRequest : NetworkCommand
+            where TResult : NetworkCommand
         {
             lock (_pending)
             {
                 _pending[transaction.TransactionId] = transaction;
-                return transaction.Task;
             }
         }
 
-        public void HandleTransactionResult(TransactionResult result)
+        public void HandleNetworkCommandResponse(NetworkCommand result, string raw)
         {
             lock (_pending)
             {
-                if (!_pending.ContainsKey(result.transaction_id))
+                if (!_pending.ContainsKey(result.commandInternalId))
                 {
-                    Debug.LogWarning($"Unknown transaction {result.transaction_id} discarded. Did you use WaitFor correctly?");
+                    Debug.LogWarning($"Unknown transaction {result.commandInternalId} discarded. Did you use WaitFor correctly?");
                     return;
                 }
 
-                var transaction = _pending[result.transaction_id];
+                var transaction = _pending[result.commandInternalId];
                 _pending.Remove(transaction.TransactionId);
-                transaction.Resolve(result);
+                transaction.Resolve(result, raw);
             }
         }
 
@@ -79,6 +83,11 @@ namespace N.Package.Relay.Infrastructure.TransactionManager
                 ExpireOldTransactions();
                 yield return new WaitForSeconds(0.01f);
             }
+        }
+
+        public void Dispose()
+        {
+            SetEventLoop(false);
         }
     }
 }

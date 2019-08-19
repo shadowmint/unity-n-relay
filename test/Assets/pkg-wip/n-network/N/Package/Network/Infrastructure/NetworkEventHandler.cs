@@ -1,8 +1,11 @@
 using System;
+using System.Threading.Tasks;
+using N.Package.Promises;
 using N.Package.Relay;
 using N.Package.Relay.Events.Client.In;
 using N.Package.Relay.Events.Master.In;
 using N.Package.Relay.Infrastructure;
+using UnityEngine;
 
 namespace N.Package.Network.Infrastructure
 {
@@ -11,7 +14,8 @@ namespace N.Package.Network.Infrastructure
         private readonly NetworkConnectionManager _manager;
         private readonly INetworkClient _client;
         private readonly INetworkMaster _master;
-        private NetworkCommandGroup _commands;
+        private readonly NetworkCommandGroup _commands;
+        private NetworkConnection _connection;
 
         public NetworkEventHandler(NetworkConnectionManager manager, INetworkClient client)
         {
@@ -29,67 +33,107 @@ namespace N.Package.Network.Infrastructure
 
         void IRelayMasterEventHandler.OnDisconnected()
         {
-            throw new NotImplementedException();
+            _master.OnMasterConnectionLostAsync().Promise().Dispatch();
         }
 
         void IRelayMasterEventHandler.OnError(Exception error)
         {
-            throw new NotImplementedException();
+            _manager.Logger.OnError(error);
         }
 
         public void OnWarning(RelayException error, string message)
         {
-            throw new NotImplementedException();
+            _manager.Logger.OnWarning(error, message);
         }
 
         public void OnMessage(MessageFromClient message)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var networkCommand = JsonUtility.FromJson<NetworkCommand>(message.data);
+                if (networkCommand.commandInternalIsResponse)
+                {
+                    _connection.ResolveTransaction(networkCommand, message.data);
+                }
+                else
+                {
+                    var responseToClient = _commands.ProcessIncomingMessage(networkCommand, message.data, _master);
+                    _connection.Send(responseToClient).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
+                }
+            }
+            catch (Exception error)
+            {
+                _manager.Logger.OnError(error);
+            }
         }
 
         public void OnClientConnected(ClientJoined message)
         {
-            throw new NotImplementedException();
+            _master.OnMasterGotClientConnectionAsync(message).Promise().Dispatch();
         }
 
         public void OnClientDisconnected(ClientDisconnected message)
         {
-            throw new NotImplementedException();
+            _master.OnMasterLostClientConnectionAsync(message).Promise().Dispatch();
         }
 
         void IRelayMasterEventHandler.OnConnected()
         {
-            throw new NotImplementedException();
+            _master.OnMasterConnectedAsync().Promise().Dispatch();
         }
 
         void IRelayClientEventHandler.OnError(Exception error)
         {
-            throw new NotImplementedException();
+            _manager.Logger.OnError(error);
         }
 
         void IRelayClientEventHandler.OnConnected()
         {
-            throw new NotImplementedException();
+            _client.OnConnectedToMasterAsync().Promise().Dispatch();
         }
 
         void IRelayClientEventHandler.OnDisconnected()
         {
-            throw new NotImplementedException();
+            _client.OnDisconnectedFromMasterAsync("Local disconnect").Promise().Dispatch();
         }
 
-        public void OnWarning(Exception relayException, string message)
+        public void OnWarning(Exception error, string message)
         {
-            throw new NotImplementedException();
+            _manager.Logger.OnError(error);
         }
 
         public void OnMessage(MessageToClient message)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var networkCommand = JsonUtility.FromJson<NetworkCommand>(message.data);
+                if (networkCommand.commandInternalIsResponse)
+                {
+                    _connection.ResolveTransaction(networkCommand, message.data);
+                }
+                else
+                {
+                    var responseToClient = _commands.ProcessIncomingMessage(networkCommand, message.data, _client);
+                    _connection.Send(responseToClient).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
+                }
+            }
+            catch (Exception error)
+            {
+                _manager.Logger.OnError(error);
+            }
         }
 
         public void OnMasterDisconnected(MasterDisconnected masterDisconnected)
         {
-            throw new NotImplementedException();
+            _client.OnDisconnectedFromMasterAsync(masterDisconnected.reason).Promise().Dispatch();
+        }
+
+        /// <summary>
+        /// Mark this event handler as specifically bound to a network connection
+        /// </summary>
+        public void Connected(NetworkConnection networkConnection)
+        {
+            _connection = networkConnection;
         }
     }
 }

@@ -1,43 +1,78 @@
 using System;
 using System.Threading.Tasks;
 using Demo;
+using N.Package.Network.Infrastructure;
 using N.Package.Relay;
 
 namespace N.Package.Network
 {
     public class NetworkConnection : IDisposable
     {
-        public NetworkConnection(INetworkMaster master, NetworkConnectionManager manager, RelayMaster masterService)
+        private readonly INetworkClient _client;
+        private readonly INetworkMaster _master;
+        private readonly NetworkConnectionManager _manager;
+        private readonly RelayClient _clientService;
+        private readonly RelayMaster _masterService;
+        private readonly NetworkTransactionManager _transactionManager;
+
+        public NetworkConnection(INetworkMaster master, NetworkConnectionManager manager, RelayMaster masterService, NetworkEventHandler eventHandler)
         {
-            throw new System.NotImplementedException();
+            _master = master;
+            _manager = manager;
+            _masterService = masterService;
+            _transactionManager = new NetworkTransactionManager();
+            eventHandler.Connected(this);
         }
 
-        public NetworkConnection(INetworkMaster master, NetworkConnectionManager manager, RelayClient clientService)
+        public NetworkConnection(INetworkClient client, NetworkConnectionManager manager, RelayClient clientService, NetworkEventHandler eventHandler)
         {
-            throw new System.NotImplementedException();
-        }
-
-        public NetworkConnection(INetworkClient client, NetworkConnectionManager manager, RelayClient clientService)
-        {
-            throw new NotImplementedException();
+            _client = client;
+            _manager = manager;
+            _clientService = clientService;
+            _transactionManager = new NetworkTransactionManager();
+            eventHandler.Connected(this);
         }
 
         public async Task<TResponse> Execute<TRequest, TResponse>(TRequest request)
             where TResponse : NetworkCommand
             where TRequest : NetworkCommand
         {
-            throw new System.NotImplementedException();
+            request.Prepare(true);
+            var deferred = new NetworkTransactionDeferred<TRequest, TResponse>(request, DateTimeOffset.Now + await _manager.NetworkCommandTimeout);
+            _transactionManager.Register(deferred);
+            await _clientService.Send(request);
+            return await deferred.Task;
         }
 
         public async Task<TResponse> Execute<TRequest, TResponse>(TRequest request, string clientId)
             where TResponse : NetworkCommand
             where TRequest : NetworkCommand
         {
-            throw new System.NotImplementedException();
+            request.Prepare(true);
+            var deferred = new NetworkTransactionDeferred<TRequest, TResponse>(request, DateTimeOffset.Now + await _manager.NetworkCommandTimeout);
+            _transactionManager.Register(deferred);
+            await _masterService.Send(clientId, request);
+            return await deferred.Task;
+        }
+
+        public Task Send<T>(T message)
+        {
+            return _clientService.Send(message);
+        }
+
+        public Task Send<T>(T message, string clientId)
+        {
+            return _masterService.Send(clientId, message);
+        }
+
+        public void ResolveTransaction(NetworkCommand command, string raw)
+        {
+            _transactionManager.HandleNetworkCommandResponse(command, raw);
         }
 
         public void Dispose()
         {
+            _transactionManager.Dispose();
         }
     }
 }

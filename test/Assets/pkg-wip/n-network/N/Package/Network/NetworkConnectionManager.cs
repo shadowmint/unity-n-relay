@@ -22,9 +22,19 @@ namespace N.Package.Network
         protected abstract Task<string> Remote { get; }
 
         /// <summary>
+        /// Return the timeout for network commands.
+        /// </summary>
+        public abstract Task<TimeSpan> NetworkCommandTimeout { get; }
+
+        /// <summary>
         /// Implement this to do common setup for any network manager instance.
         /// </summary>
         protected abstract Task Configure();
+
+        /// <summary>
+        /// Return the network logging utility
+        /// </summary>
+        public abstract INetworkLogger Logger { get; }
 
         /// <summary>
         /// Register a command handler to handle networking events.
@@ -55,7 +65,7 @@ namespace N.Package.Network
             var remote = await Remote;
             var eventHandler = new NetworkEventHandler(this, master);
             var masterService = new RelayMaster(eventHandler, transactionManager);
-            var networkConnection = new NetworkConnection(master, this, masterService);
+            var networkConnection = new NetworkConnection(master, this, masterService, eventHandler);
 
             // Try to connect
             transactionManager.SetEventLoop(true);
@@ -78,7 +88,7 @@ namespace N.Package.Network
             var remote = await Remote;
             var eventHandler = new NetworkEventHandler(this, client);
             var clientService = new RelayClient(eventHandler, transactionManager);
-            var networkConnection = new NetworkConnection(client, this, clientService);
+            var networkConnection = new NetworkConnection(client, this, clientService, eventHandler);
 
             // Try to connect
             transactionManager.SetEventLoop(true);

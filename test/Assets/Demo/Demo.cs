@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Demo.Network;
 using N.Package.Network;
@@ -17,10 +18,17 @@ namespace Demo
 
         private async Task StartAsync()
         {
-            _connectionMaster = new DemoConnectionManager();
-            await _connectionMaster.Connect(new DemoServiceMaster());
-            await _connectionMaster.Connect(new DemoServiceClient("Client 1"));
-            await _connectionMaster.Connect(new DemoServiceClient("Client 2"));
+            try
+            {
+                _connectionMaster = new DemoConnectionManager();
+                await _connectionMaster.Connect(new DemoServiceMaster());
+                await _connectionMaster.Connect(new DemoServiceClient("Client 1"));
+                await _connectionMaster.Connect(new DemoServiceClient("Client 2"));
+            }
+            catch (Exception error)
+            {
+                Debug.LogException(error);
+            }
         }
     }
 }
