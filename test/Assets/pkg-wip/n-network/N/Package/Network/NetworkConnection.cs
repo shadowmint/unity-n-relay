@@ -37,6 +37,7 @@ namespace N.Package.Network
             where TResponse : NetworkCommand
             where TRequest : NetworkCommand
         {
+            GuardIsClient();
             request.Prepare(true);
             var deferred = new NetworkTransactionDeferred<TRequest, TResponse>(request, DateTimeOffset.Now + await _manager.NetworkCommandTimeout);
             _transactionManager.Register(deferred);
@@ -44,10 +45,12 @@ namespace N.Package.Network
             return await deferred.Task;
         }
 
+
         public async Task<TResponse> Execute<TRequest, TResponse>(TRequest request, string clientId)
             where TResponse : NetworkCommand
             where TRequest : NetworkCommand
         {
+            GuardIsMaster();
             request.Prepare(true);
             var deferred = new NetworkTransactionDeferred<TRequest, TResponse>(request, DateTimeOffset.Now + await _manager.NetworkCommandTimeout);
             _transactionManager.Register(deferred);
@@ -57,11 +60,13 @@ namespace N.Package.Network
 
         public Task Send<T>(T message)
         {
+            GuardIsClient();
             return _clientService.Send(message);
         }
 
         public Task Send<T>(T message, string clientId)
         {
+            GuardIsMaster();
             return _masterService.Send(clientId, message);
         }
 
@@ -73,6 +78,22 @@ namespace N.Package.Network
         public void Dispose()
         {
             _transactionManager.Dispose();
+        }
+
+        private void GuardIsClient()
+        {
+            if (_clientService == null && _masterService != null)
+            {
+                throw new NetworkException(NetworkException.NetworkExceptionType.MissingClientIdOnMasterRequest);
+            }
+        }
+
+        private void GuardIsMaster()
+        {
+            if (_masterService == null && _clientService != null)
+            {
+                throw new NetworkException(NetworkException.NetworkExceptionType.InvalidClientIdOnClientRequest);
+            }
         }
     }
 }

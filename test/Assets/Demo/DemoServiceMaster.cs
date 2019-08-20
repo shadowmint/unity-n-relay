@@ -54,12 +54,11 @@ namespace Demo
             await NetworkConnection.Execute<DemoRpcSetClientState, DemoRpcSetClientStateResponse>(new DemoRpcSetClientState()
             {
                 state = DemoRpcClientState.AllowInput
-            });
-            await NetworkConnection.Execute<DemoRpcMessageHandler.DemoRpcMessage, DemoRpcMessageHandler.DemoRpcMessageResponse>(
-                new DemoRpcMessageHandler.DemoRpcMessage()
-                {
-                    message = "Welcome to server!"
-                });
+            }, message.client_id);
+            await NetworkConnection.Execute<DemoRpcMessage, DemoRpcMessageResponse>(new DemoRpcMessage()
+            {
+                message = "Welcome to server!"
+            }, message.client_id);
         }
     }
 }

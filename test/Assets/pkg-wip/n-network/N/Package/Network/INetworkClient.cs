@@ -8,7 +8,7 @@ namespace N.Package.Network
     {
         Guid Identity { get; set; }
         
-        NetworkConnection NetworkConnection { get; }
+        NetworkConnection NetworkConnection { get; set; }
 
         Task<RelayClientOptions> ClientOptions { get; }
 

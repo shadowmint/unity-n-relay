@@ -33,7 +33,7 @@ namespace N.Package.Network.Infrastructure
 
         void IRelayMasterEventHandler.OnDisconnected()
         {
-            _master.OnMasterConnectionLostAsync().Promise().Dispatch();
+            _master.OnMasterConnectionLostAsync().Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         void IRelayMasterEventHandler.OnError(Exception error)
@@ -48,6 +48,11 @@ namespace N.Package.Network.Infrastructure
 
         public void OnMessage(MessageFromClient message)
         {
+            OnMessageAsync(message).Promise().Dispatch();
+        }
+
+        private async Task OnMessageAsync(MessageFromClient message)
+        {
             try
             {
                 var networkCommand = JsonUtility.FromJson<NetworkCommand>(message.data);
@@ -57,8 +62,10 @@ namespace N.Package.Network.Infrastructure
                 }
                 else
                 {
-                    var responseToClient = _commands.ProcessIncomingMessage(networkCommand, message.data, _master);
-                    _connection.Send(responseToClient).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
+                    var responseToClient = await _commands.ProcessIncomingMessage(networkCommand, message.data, _master);
+                    responseToClient.commandInternalIsResponse = true;
+                    responseToClient.commandInternalId = networkCommand.commandInternalId;
+                    await _connection.Send(responseToClient, message.client_id);
                 }
             }
             catch (Exception error)
@@ -69,17 +76,17 @@ namespace N.Package.Network.Infrastructure
 
         public void OnClientConnected(ClientJoined message)
         {
-            _master.OnMasterGotClientConnectionAsync(message).Promise().Dispatch();
+            _master.OnMasterGotClientConnectionAsync(message).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         public void OnClientDisconnected(ClientDisconnected message)
         {
-            _master.OnMasterLostClientConnectionAsync(message).Promise().Dispatch();
+            _master.OnMasterLostClientConnectionAsync(message).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         void IRelayMasterEventHandler.OnConnected()
         {
-            _master.OnMasterConnectedAsync().Promise().Dispatch();
+            _master.OnMasterConnectedAsync().Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         void IRelayClientEventHandler.OnError(Exception error)
@@ -89,12 +96,12 @@ namespace N.Package.Network.Infrastructure
 
         void IRelayClientEventHandler.OnConnected()
         {
-            _client.OnConnectedToMasterAsync().Promise().Dispatch();
+            _client.OnConnectedToMasterAsync().Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         void IRelayClientEventHandler.OnDisconnected()
         {
-            _client.OnDisconnectedFromMasterAsync("Local disconnect").Promise().Dispatch();
+            _client.OnDisconnectedFromMasterAsync("Local disconnect").Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
         }
 
         public void OnWarning(Exception error, string message)
@@ -103,6 +110,11 @@ namespace N.Package.Network.Infrastructure
         }
 
         public void OnMessage(MessageToClient message)
+        {
+            OnMessageAsync(message).Promise().Dispatch();
+        }
+
+        private async Task OnMessageAsync(MessageToClient message)
         {
             try
             {
@@ -113,8 +125,10 @@ namespace N.Package.Network.Infrastructure
                 }
                 else
                 {
-                    var responseToClient = _commands.ProcessIncomingMessage(networkCommand, message.data, _client);
-                    _connection.Send(responseToClient).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err)).Dispatch();
+                    var responseToMaster = await _commands.ProcessIncomingMessage(networkCommand, message.data, _client);
+                    responseToMaster.commandInternalIsResponse = true;
+                    responseToMaster.commandInternalId = networkCommand.commandInternalId;
+                    await _connection.Send(responseToMaster);
                 }
             }
             catch (Exception error)
@@ -125,7 +139,8 @@ namespace N.Package.Network.Infrastructure
 
         public void OnMasterDisconnected(MasterDisconnected masterDisconnected)
         {
-            _client.OnDisconnectedFromMasterAsync(masterDisconnected.reason).Promise().Dispatch();
+            _client.OnDisconnectedFromMasterAsync(masterDisconnected.reason).Promise().Then(() => { }, (err) => _manager.Logger.OnError(err))
+                .Dispatch();
         }
 
         /// <summary>

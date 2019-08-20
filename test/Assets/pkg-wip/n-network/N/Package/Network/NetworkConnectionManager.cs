@@ -69,6 +69,7 @@ namespace N.Package.Network
 
             // Try to connect
             transactionManager.SetEventLoop(true);
+            master.NetworkConnection = networkConnection;
             await masterService.Connect(remote, options);
 
             // Save active connections
@@ -92,6 +93,7 @@ namespace N.Package.Network
 
             // Try to connect
             transactionManager.SetEventLoop(true);
+            client.NetworkConnection = networkConnection;
             await clientService.Connect(remote, options);
 
             // Save active connections
