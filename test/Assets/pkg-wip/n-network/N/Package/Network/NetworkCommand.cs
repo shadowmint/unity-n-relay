@@ -14,11 +14,12 @@ namespace N.Package.Network
         /// <summary>
         /// Invoke before sending to force the command type to be correct.
         /// </summary>
-        public void Prepare(bool isRequest)
+        public NetworkCommand Prepare(bool isRequest)
         {
             commandInternalType = CommandTypeFor(GetType());
             commandInternalId = Guid.NewGuid().ToString();
             commandInternalIsResponse = !isRequest;
+            return this;
         }
 
         public static string CommandTypeFor(Type t)

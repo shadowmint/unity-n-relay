@@ -16,10 +16,26 @@ namespace N.Package.Network
             /// <summary>
             /// Client cannot specify a client id; can only send to master.
             /// </summary>
-            InvalidClientIdOnClientRequest
+            InvalidClientIdOnClientRequest,
+
+            /// <summary>
+            /// A request was received that didn't match any known binding.
+            /// </summary>
+            UnsupportedCommandType,
+            CommandFailed
         }
 
         public NetworkException(NetworkExceptionType exceptionType) : base($"{exceptionType}")
+        {
+            ExceptionType = exceptionType;
+        }
+
+        public NetworkException(NetworkExceptionType exceptionType, string message) : base($"{exceptionType}: {message}")
+        {
+            ExceptionType = exceptionType;
+        }
+        
+        public NetworkException(NetworkExceptionType exceptionType, Exception innerException) : base($"{exceptionType}", innerException)
         {
             ExceptionType = exceptionType;
         }
