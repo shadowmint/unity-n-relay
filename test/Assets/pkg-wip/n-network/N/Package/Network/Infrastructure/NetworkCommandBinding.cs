@@ -10,7 +10,7 @@ namespace N.Package.Network.Infrastructure
 
         private Func<string, NetworkCommand> _deserializeRequest;
 
-        public string Identity { get; private set; }
+        public string CommandInternalType { get; private set; }
 
         public static NetworkCommandBinding From<TRequest, TResponse>(NetworkCommandType source, NetworkCommandHandler<TRequest, TResponse> handler)
             where TRequest : NetworkCommand where TResponse : NetworkCommand
@@ -21,18 +21,18 @@ namespace N.Package.Network.Infrastructure
                 case NetworkCommandType.FromClient:
                     return new NetworkCommandBinding()
                     {
-                        Identity = NetworkCommand.CommandTypeFor(typeof(TRequest)),
+                        CommandInternalType = NetworkCommand.CommandTypeFor(typeof(TRequest)),
                         _deserializeRequest = JsonUtility.FromJson<TRequest>,
-                        _handleRequest = async (net, command) => await handler.ProcessRequestOnClient(net as INetworkClient, command as TRequest),
+                        _handleRequest = async (net, command) => await handler.ProcessRequestOnMaster(net as INetworkMaster, command as TRequest),
                     };
 
                 // Request that are from master are handled as requests on the client.
                 case NetworkCommandType.FromMaster:
                     return new NetworkCommandBinding()
                     {
-                        Identity = NetworkCommand.CommandTypeFor(typeof(TRequest)),
+                        CommandInternalType = NetworkCommand.CommandTypeFor(typeof(TRequest)),
                         _deserializeRequest = JsonUtility.FromJson<TRequest>,
-                        _handleRequest = async (net, command) => await handler.ProcessRequestOnMaster(net as INetworkMaster, command as TRequest)
+                        _handleRequest = async (net, command) => await handler.ProcessRequestOnClient(net as INetworkClient, command as TRequest)
                     };
 
                 default:

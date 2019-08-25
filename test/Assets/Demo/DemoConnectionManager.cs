@@ -19,9 +19,9 @@ namespace Demo
 
         protected override Task Configure()
         {
-            Register(NetworkCommandType.FromClient, new DemoRpcMessageHandler());
-            //   Register(NetworkCommandType.FromMaster, new NetworkCommandHandler());
-//            Register(NetworkCommandType.FromAny, new NetworkCommandHandler());
+            Register(NetworkCommandType.FromAny, new DemoRpcMessageHandler());
+            Register(NetworkCommandType.FromClient, new DemoRpcSetUsernameHandler());
+            Register(NetworkCommandType.FromMaster, new DemoRpcSetClientStateHandler());
             return Task.CompletedTask;
         }
 

@@ -20,7 +20,9 @@ namespace Demo
         }
 
         public Guid Identity { get; set; }
-        
+
+        public string Name => _username ?? _clientId;
+
         public NetworkConnection NetworkConnection { get; set; }
 
         public Task<RelayClientOptions> ClientOptions
@@ -36,7 +38,7 @@ namespace Demo
 
         public async Task OnConnectedToMasterAsync()
         {
-            Debug.Log($"Client: {_clientId}: OK! Setting username...");
+            Debug.Log($"Client: {_clientId}: Setting username...");
             var response = await NetworkConnection.Execute<DemoRpcSetUsername, DemoRpcSetUsernameResponse>(new DemoRpcSetUsername()
             {
                 requestedPlayerName = _clientId

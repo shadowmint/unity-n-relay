@@ -37,7 +37,7 @@ namespace N.Package.WebSocket
                     EventLoopStep(() => { busy = false; }).Dispatch();
                 }
 
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.01f);
             }
         }
 

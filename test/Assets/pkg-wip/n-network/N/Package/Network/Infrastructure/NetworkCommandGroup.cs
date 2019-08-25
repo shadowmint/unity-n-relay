@@ -8,8 +8,9 @@ namespace N.Package.Network.Infrastructure
 {
     public class NetworkCommandGroup
     {
-        private readonly List<NetworkCommandBinding> _fromMaster = new List<NetworkCommandBinding>();
-        private readonly List<NetworkCommandBinding> _fromClient = new List<NetworkCommandBinding>();
+        private List<NetworkCommandBinding> _fromMaster = new List<NetworkCommandBinding>();
+        
+        private List<NetworkCommandBinding> _fromClient = new List<NetworkCommandBinding>();
 
         public NetworkConnection NetworkConnection { get; set; }
 
@@ -17,7 +18,9 @@ namespace N.Package.Network.Infrastructure
         {
             return new NetworkCommandGroup()
             {
-                NetworkConnection = NetworkConnection
+                NetworkConnection = NetworkConnection,
+                _fromClient = _fromClient.ToList(),
+                _fromMaster = _fromMaster.ToList()
             };
         }
 
@@ -84,7 +87,7 @@ namespace N.Package.Network.Infrastructure
 
         private NetworkCommandBinding FindBindingFor(NetworkCommand command, List<NetworkCommandBinding> bindings)
         {
-            return bindings.FirstOrDefault(i => i.Identity == command.commandInternalId);
+            return bindings.FirstOrDefault(i => i.CommandInternalType == command.commandInternalType);
         }
     }
 }
