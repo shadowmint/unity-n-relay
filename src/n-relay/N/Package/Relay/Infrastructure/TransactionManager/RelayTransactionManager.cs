@@ -1,11 +1,8 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using N.Package.Promises;
-using N.Package.Relay.Events.Client;
 using N.Package.Relay.Infrastructure.Model;
 using UnityEngine;
 
@@ -80,7 +77,7 @@ namespace N.Package.Relay.Infrastructure.TransactionManager
             while (_active)
             {
                 ExpireOldTransactions();
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.01f);
             }
         }
     }

@@ -1,6 +1,7 @@
 using System;
 using N.Package.Relay.Infrastructure.Model;
 using N.Package.WebSocket;
+using UnityEngine;
 
 namespace N.Package.Relay
 {
@@ -12,15 +13,10 @@ namespace N.Package.Relay
         public MasterMetadata metadata;
 
         public RelayAuthOptions auth;
-    }
 
-    [System.Serializable]
-    public class RelayAuthOptions
-    {
-        public long sessionLength;
-
-        public string authKey;
-
-        public string authSecret;
+        public RelayMasterOptions Clone()
+        {
+            return JsonUtility.FromJson<RelayMasterOptions>(JsonUtility.ToJson(this));
+        }
     }
 }
