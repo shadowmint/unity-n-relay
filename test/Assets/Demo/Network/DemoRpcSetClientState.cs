@@ -26,7 +26,7 @@ namespace Demo.Network
 
     public class DemoRpcSetClientStateHandler : NetworkCommandHandler<DemoRpcSetClientState, DemoRpcSetClientStateResponse>
     {
-        public override Task<DemoRpcSetClientStateResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcSetClientState request)
+        public override Task<DemoRpcSetClientStateResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcSetClientState request, string clientId)
         {
             return Task.FromResult(new DemoRpcSetClientStateResponse()
             {

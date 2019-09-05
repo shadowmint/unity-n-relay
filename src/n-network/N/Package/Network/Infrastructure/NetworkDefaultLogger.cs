@@ -1,17 +1,19 @@
 using System;
-using N.Package.Network;
 using N.Package.Relay.Infrastructure;
 
-public class NetworkDefaultLogger : INetworkLogger
+namespace N.Package.Network.Infrastructure
 {
-    public void OnError(Exception error)
+    public class NetworkDefaultLogger : INetworkLogger
     {
-        UnityEngine.Debug.LogException(error);
-    }
+        public void OnError(Exception error)
+        {
+            UnityEngine.Debug.LogException(error);
+        }
 
-    public void OnWarning(RelayException error, string message)
-    {
-        UnityEngine.Debug.LogWarning(message);
-        UnityEngine.Debug.LogException(error);
+        public void OnWarning(RelayException error, string message)
+        {
+            UnityEngine.Debug.LogWarning(message);
+            UnityEngine.Debug.LogException(error);
+        }
     }
 }

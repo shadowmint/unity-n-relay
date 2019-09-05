@@ -20,9 +20,9 @@ namespace Demo.Network
 
     public class DemoRpcMessageHandler : NetworkCommandHandler<DemoRpcMessage, DemoRpcMessageResponse>
     {
-        public override Task<DemoRpcMessageResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcMessage request)
+        public override Task<DemoRpcMessageResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcMessage request, string clientId)
         {
-            Debug.Log($"Master got message: {request.message}");
+            Debug.Log($"Master got message: {request.message} from {clientId}");
             return Task.FromResult(new DemoRpcMessageResponse()
             {
                 success = true,

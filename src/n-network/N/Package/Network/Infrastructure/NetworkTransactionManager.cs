@@ -2,14 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using N.Package.Promises;
 using N.Package.Relay.Infrastructure;
-using N.Package.Relay.Infrastructure.Model;
-using N.Package.Relay.Infrastructure.TransactionManager;
 using UnityEngine;
 
-namespace N.Package.Network
+namespace N.Package.Network.Infrastructure
 {
     public class NetworkTransactionManager : IDisposable
     {

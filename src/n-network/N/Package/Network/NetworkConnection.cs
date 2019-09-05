@@ -7,30 +7,28 @@ namespace N.Package.Network
 {
     public class NetworkConnection : IDisposable
     {
-        private readonly INetworkClient _client;
-        private readonly INetworkMaster _master;
         private readonly NetworkConnectionManager _manager;
         private readonly RelayClient _clientService;
         private readonly RelayMaster _masterService;
         private readonly NetworkTransactionManager _transactionManager;
 
-        public NetworkConnection(INetworkMaster master, NetworkConnectionManager manager, RelayMaster masterService, NetworkEventHandler eventHandler)
+        public NetworkConnection(NetworkConnectionManager manager, RelayMaster masterService, NetworkEventHandler eventHandler)
         {
-            _master = master;
             _manager = manager;
             _masterService = masterService;
             _transactionManager = new NetworkTransactionManager();
             eventHandler.Connected(this);
         }
 
-        public NetworkConnection(INetworkClient client, NetworkConnectionManager manager, RelayClient clientService, NetworkEventHandler eventHandler)
+        public NetworkConnection(NetworkConnectionManager manager, RelayClient clientService, NetworkEventHandler eventHandler)
         {
-            _client = client;
             _manager = manager;
             _clientService = clientService;
             _transactionManager = new NetworkTransactionManager();
             eventHandler.Connected(this);
         }
+
+        public INetworkPermissions Permissions => _manager.Permissions;
 
         public async Task<TResponse> Execute<TRequest, TResponse>(TRequest request)
             where TResponse : NetworkCommand
@@ -83,7 +81,7 @@ namespace N.Package.Network
         {
             if (_clientService == null && _masterService != null)
             {
-                throw new NetworkException(NetworkException.NetworkExceptionType.MissingClientIdOnMasterRequest);
+                throw new NetworkException(NetworkException.NetworkExceptionType.InvalidClientIdOnClientRequest);
             }
         }
 
@@ -91,7 +89,7 @@ namespace N.Package.Network
         {
             if (_masterService == null && _clientService != null)
             {
-                throw new NetworkException(NetworkException.NetworkExceptionType.InvalidClientIdOnClientRequest);
+                throw new NetworkException(NetworkException.NetworkExceptionType.MissingClientIdOnMasterRequest);
             }
         }
     }

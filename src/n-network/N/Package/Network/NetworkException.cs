@@ -22,7 +22,16 @@ namespace N.Package.Network
             /// A request was received that didn't match any known binding.
             /// </summary>
             UnsupportedCommandType,
-            CommandFailed
+            
+            /// <summary>
+            /// A command failed to execute successfully
+            /// </summary>
+            CommandFailed,
+            
+            /// <summary>
+            /// When the command is not allowed
+            /// </summary>
+            NotPermitted
         }
 
         public NetworkException(NetworkExceptionType exceptionType) : base($"{exceptionType}")

@@ -6,7 +6,7 @@ namespace N.Package.Network.Infrastructure
 {
     class NetworkCommandBinding
     {
-        private Func<object, NetworkCommand, Task<NetworkCommand>> _handleRequest;
+        private Func<object, string, NetworkCommand, Task<NetworkCommand>> _handleRequest;
 
         private Func<string, NetworkCommand> _deserializeRequest;
 
@@ -23,7 +23,7 @@ namespace N.Package.Network.Infrastructure
                     {
                         CommandInternalType = NetworkCommand.CommandTypeFor(typeof(TRequest)),
                         _deserializeRequest = JsonUtility.FromJson<TRequest>,
-                        _handleRequest = async (net, command) => await handler.ProcessRequestOnMaster(net as INetworkMaster, command as TRequest),
+                        _handleRequest = async (net, clientId, command) => await handler.ProcessRequestOnMaster(net as INetworkMaster, command as TRequest, clientId),
                     };
 
                 // Request that are from master are handled as requests on the client.
@@ -32,7 +32,7 @@ namespace N.Package.Network.Infrastructure
                     {
                         CommandInternalType = NetworkCommand.CommandTypeFor(typeof(TRequest)),
                         _deserializeRequest = JsonUtility.FromJson<TRequest>,
-                        _handleRequest = async (net, command) => await handler.ProcessRequestOnClient(net as INetworkClient, command as TRequest)
+                        _handleRequest = async (net, clientId, command) => await handler.ProcessRequestOnClient(net as INetworkClient, command as TRequest)
                     };
 
                 default:
@@ -45,9 +45,14 @@ namespace N.Package.Network.Infrastructure
             return _deserializeRequest(raw);
         }
 
+        public Task<NetworkCommand> HandleRequest<T>(T networkService, NetworkCommand command, string fromClientId)
+        {
+            return _handleRequest(networkService, fromClientId, command);
+        }
+        
         public Task<NetworkCommand> HandleRequest<T>(T networkService, NetworkCommand command)
         {
-            return _handleRequest(networkService, command);
+            return _handleRequest(networkService, "", command);
         }
     }
 }

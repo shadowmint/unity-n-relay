@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using N.Package.Relay.Infrastructure;
 using UnityEngine;
 
-namespace N.Package.Network
+namespace N.Package.Network.Infrastructure
 {
     public interface INetworkTransactionDeferred
     {

@@ -21,14 +21,14 @@ namespace N.Package.Network.Infrastructure
         {
             _manager = manager;
             _client = client;
-            _commands = manager.CommandGroupFor(client.NetworkConnection);
+            _commands = manager.Commands();
         }
 
         public NetworkEventHandler(NetworkConnectionManager manager, INetworkMaster master)
         {
             _manager = manager;
             _master = master;
-            _commands = manager.CommandGroupFor(master.NetworkConnection);
+            _commands = manager.Commands();
         }
 
         void IRelayMasterEventHandler.OnDisconnected()
@@ -62,10 +62,25 @@ namespace N.Package.Network.Infrastructure
                 }
                 else
                 {
-                    var responseToClient = await _commands.ProcessIncomingMessage(networkCommand, message.data, _master);
-                    responseToClient.commandInternalIsResponse = true;
-                    responseToClient.commandInternalId = networkCommand.commandInternalId;
-                    await _connection.Send(responseToClient, message.client_id);
+                    try
+                    {
+                        var responseToClient = await _commands.ProcessIncomingMessage(_connection, networkCommand, message.data, _master, message.client_id);
+                        responseToClient.commandInternalType = NetworkCommand.CommandTypeFor(responseToClient.GetType());
+                        responseToClient.commandInternalIsResponse = true;
+                        responseToClient.commandInternalId = networkCommand.commandInternalId;
+                        await _connection.Send(responseToClient, message.client_id);
+                    }
+                    catch (Exception error)
+                    {
+                        _manager.Logger.OnError(error);
+                        await _connection.Send(new NetworkCommandError()
+                        {
+                            message = error.Message,
+                            commandInternalType = NetworkCommand.CommandTypeFor(typeof(NetworkCommandError)),
+                            commandInternalIsResponse = true,
+                            commandInternalId = networkCommand.commandInternalId
+                        }, message.client_id);
+                    }
                 }
             }
             catch (Exception error)
@@ -125,10 +140,25 @@ namespace N.Package.Network.Infrastructure
                 }
                 else
                 {
-                    var responseToMaster = await _commands.ProcessIncomingMessage(networkCommand, message.data, _client);
-                    responseToMaster.commandInternalIsResponse = true;
-                    responseToMaster.commandInternalId = networkCommand.commandInternalId;
-                    await _connection.Send(responseToMaster);
+                    try
+                    {
+                        var responseToMaster = await _commands.ProcessIncomingMessage(_connection, networkCommand, message.data, _client);
+                        responseToMaster.commandInternalType = NetworkCommand.CommandTypeFor(responseToMaster.GetType());
+                        responseToMaster.commandInternalIsResponse = true;
+                        responseToMaster.commandInternalId = networkCommand.commandInternalId;
+                        await _connection.Send(responseToMaster);
+                    }
+                    catch (Exception error)
+                    {
+                        _manager.Logger.OnError(error);
+                        await _connection.Send(new NetworkCommandError()
+                        {
+                            message = error.Message,
+                            commandInternalType = NetworkCommand.CommandTypeFor(typeof(NetworkCommandError)),
+                            commandInternalIsResponse = true,
+                            commandInternalId = networkCommand.commandInternalId
+                        });
+                    }
                 }
             }
             catch (Exception error)

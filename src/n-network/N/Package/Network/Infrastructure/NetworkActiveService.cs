@@ -1,6 +1,6 @@
 using N.Package.Relay.Infrastructure.TransactionManager;
 
-namespace N.Package.Network
+namespace N.Package.Network.Infrastructure
 {
     public class NetworkActiveService
     {

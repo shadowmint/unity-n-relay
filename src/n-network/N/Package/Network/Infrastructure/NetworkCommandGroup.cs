@@ -9,16 +9,13 @@ namespace N.Package.Network.Infrastructure
     public class NetworkCommandGroup
     {
         private List<NetworkCommandBinding> _fromMaster = new List<NetworkCommandBinding>();
-        
-        private List<NetworkCommandBinding> _fromClient = new List<NetworkCommandBinding>();
 
-        public NetworkConnection NetworkConnection { get; set; }
+        private List<NetworkCommandBinding> _fromClient = new List<NetworkCommandBinding>();
 
         public NetworkCommandGroup Clone()
         {
             return new NetworkCommandGroup()
             {
-                NetworkConnection = NetworkConnection,
                 _fromClient = _fromClient.ToList(),
                 _fromMaster = _fromMaster.ToList()
             };
@@ -45,7 +42,7 @@ namespace N.Package.Network.Infrastructure
             }
         }
 
-        public async Task<NetworkCommand> ProcessIncomingMessage(NetworkCommand command, string raw, INetworkMaster master)
+        public async Task<NetworkCommand> ProcessIncomingMessage(NetworkConnection connection, NetworkCommand command, string raw, INetworkMaster master, string fromClientId)
         {
             // This is correct; we handle requests from clients on the master.
             var binding = FindBindingFor(command, _fromClient);
@@ -57,7 +54,8 @@ namespace N.Package.Network.Infrastructure
             try
             {
                 var fullRequest = binding.DeserializeRequest(raw);
-                return await binding.HandleRequest(master, fullRequest);
+                await VerifyPermission(connection, fullRequest, master, fromClientId);
+                return await binding.HandleRequest(master, fullRequest, fromClientId);
             }
             catch (Exception error)
             {
@@ -65,7 +63,7 @@ namespace N.Package.Network.Infrastructure
             }
         }
 
-        public async Task<NetworkCommand> ProcessIncomingMessage(NetworkCommand command, string raw, INetworkClient client)
+        public async Task<NetworkCommand> ProcessIncomingMessage(NetworkConnection connection, NetworkCommand command, string raw, INetworkClient client)
         {
             // This is correct; we handle requests from master on the clients.
             var binding = FindBindingFor(command, _fromMaster);
@@ -77,6 +75,7 @@ namespace N.Package.Network.Infrastructure
             try
             {
                 var fullRequest = binding.DeserializeRequest(raw);
+                await VerifyPermission(connection, fullRequest, client);
                 return await binding.HandleRequest(client, fullRequest);
             }
             catch (Exception error)
@@ -88,6 +87,22 @@ namespace N.Package.Network.Infrastructure
         private NetworkCommandBinding FindBindingFor(NetworkCommand command, List<NetworkCommandBinding> bindings)
         {
             return bindings.FirstOrDefault(i => i.CommandInternalType == command.commandInternalType);
+        }
+
+        private async Task VerifyPermission(NetworkConnection connection, NetworkCommand command, INetworkMaster master, string fromClientId)
+        {
+            if (!await connection.Permissions.IsPermittedOnMaster(command, master, fromClientId))
+            {
+                throw new NetworkException(NetworkException.NetworkExceptionType.NotPermitted);
+            }
+        }
+
+        private async Task VerifyPermission(NetworkConnection connection, NetworkCommand command, INetworkClient client)
+        {
+            if (!await connection.Permissions.IsPermittedOnClient(command, client))
+            {
+                throw new NetworkException(NetworkException.NetworkExceptionType.NotPermitted);
+            }
         }
     }
 }

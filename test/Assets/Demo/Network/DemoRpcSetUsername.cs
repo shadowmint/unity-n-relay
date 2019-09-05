@@ -23,7 +23,7 @@ namespace Demo.Network
     {
         private static readonly List<string> Users = new List<string>();
 
-        public override Task<DemoRpcSetUsernameResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcSetUsername request)
+        public override Task<DemoRpcSetUsernameResponse> ProcessRequestOnMaster(INetworkMaster master, DemoRpcSetUsername request, string clientId)
         {
             lock (Users)
             {

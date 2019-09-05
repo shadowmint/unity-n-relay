@@ -14,7 +14,11 @@ namespace N.Package.Network
 
         private readonly List<NetworkActiveService> _active = new List<NetworkActiveService>();
 
-        private bool _initialized = false;
+        private bool _initialized;
+
+        private INetworkLogger _logger;
+
+        private INetworkPermissions _permissions;
 
         /// <summary>
         /// Return the remote end point URL to connect through with the relay.
@@ -34,26 +38,27 @@ namespace N.Package.Network
         /// <summary>
         /// Return the network logging utility
         /// </summary>
-        public abstract INetworkLogger Logger { get; }
+        public virtual INetworkLogger Logger => _logger ?? (_logger = new NetworkDefaultLogger());
+
+        /// <summary>
+        /// Return the network permission utility
+        /// </summary>
+        public virtual INetworkPermissions Permissions => _permissions ?? (_permissions = new NetworkDefaultPermissions());
 
         /// <summary>
         /// Register a command handler to handle networking events.
         /// </summary>
-        protected void Register<TRequest, TResponse>(NetworkCommandType source, NetworkCommandHandler<TRequest, TResponse> handler)
+        public void Register<TRequest, TResponse>(NetworkCommandType source, NetworkCommandHandler<TRequest, TResponse> handler)
             where TResponse : NetworkCommand
             where TRequest : NetworkCommand
         {
             _commands.Register(source, handler);
         }
 
-        /// <summary>
-        /// Return the unique command group for a specific connection.
-        /// </summary>
-        public NetworkCommandGroup CommandGroupFor(NetworkConnection networkConnection)
+        public void Disconnect(NetworkConnection connection)
         {
-            var group = _commands.Clone();
-            group.NetworkConnection = networkConnection;
-            return group;
+            _active.RemoveAll(i => i.NetworkConnection == connection);
+            connection.Dispose();
         }
 
         public async Task Connect(INetworkMaster master)
@@ -65,7 +70,7 @@ namespace N.Package.Network
             var remote = await Remote;
             var eventHandler = new NetworkEventHandler(this, master);
             var masterService = new RelayMaster(eventHandler, transactionManager);
-            var networkConnection = new NetworkConnection(master, this, masterService, eventHandler);
+            var networkConnection = new NetworkConnection(this, masterService, eventHandler);
 
             // Try to connect
             transactionManager.SetEventLoop(true);
@@ -89,7 +94,7 @@ namespace N.Package.Network
             var remote = await Remote;
             var eventHandler = new NetworkEventHandler(this, client);
             var clientService = new RelayClient(eventHandler, transactionManager);
-            var networkConnection = new NetworkConnection(client, this, clientService, eventHandler);
+            var networkConnection = new NetworkConnection(this, clientService, eventHandler);
 
             // Try to connect
             transactionManager.SetEventLoop(true);
@@ -118,6 +123,11 @@ namespace N.Package.Network
             if (_initialized) return Task.CompletedTask;
             _initialized = true;
             return Configure();
+        }
+
+        public NetworkCommandGroup Commands()
+        {
+            return _commands;
         }
     }
 }

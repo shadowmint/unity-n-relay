@@ -7,8 +7,6 @@ namespace N.Package.Network
 {
     public interface INetworkMaster
     {
-        Guid Identity { get; set; }
-        
         NetworkConnection NetworkConnection { get; set; }
 
         Task<RelayMasterOptions> MasterOptions { get; }
