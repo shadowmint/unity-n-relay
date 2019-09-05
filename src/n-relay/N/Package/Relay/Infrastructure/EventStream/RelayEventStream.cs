@@ -20,10 +20,16 @@ namespace N.Package.Relay.Infrastructure.EventStream
             _serializer = new RelaySerializationHelper();
         }
 
-        public async Task Connect(string remote, WebSocketConnectionOptions options = null)
+        public async Task Connect(string remote, string authToken, WebSocketConnectionOptions options = null)
         {
+            var connectionString = GenerateConnectionString(remote, authToken);
             _connection = new WebSocketEventStream(OnWebSocketEvent);
-            await _connection.Connect(remote, options);
+            await _connection.Connect(connectionString, options);
+        }
+
+        private string GenerateConnectionString(string remote, string authToken)
+        {
+            return $"{remote}?token={authToken}";
         }
 
         public async Task Disconnect()

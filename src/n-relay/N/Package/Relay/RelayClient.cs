@@ -40,11 +40,12 @@ namespace N.Package.Relay
         /// <summary>
         /// Connect this to the remote relay service.
         /// </summary>
-        public async Task Connect(string remote, RelayClientOptions options = null)
+        public async Task Connect(string remote, RelayClientOptions options)
         {
             _eventStream = new RelayEventStream(OnRelayEvent);
             _options = options;
-            await _eventStream.Connect(remote, options);
+            var authToken = _auth.GenerateAuthToken(_options.auth);
+            await _eventStream.Connect(remote, authToken, options);
         }
 
         /// <summary>
@@ -65,29 +66,6 @@ namespace N.Package.Relay
         /// <returns></returns>
         private async Task InitializeClient()
         {
-            // Auth
-            var deferredAuth = new RelayDeferredTransaction(_options.transactionTimeout);
-            var deferredAuthTask = _transactionManager.WaitFor(deferredAuth);
-            await _eventStream.Send(new Auth()
-            {
-                transaction_id = deferredAuth.TransactionId,
-                request = _auth.GenerateAuthRequest(
-                    deferredAuth.TransactionId,
-                    _options.auth.sessionLength,
-                    _options.auth.authKey,
-                    _options.auth.authSecret),
-            });
-
-            // Wait for response
-            try
-            {
-                await deferredAuthTask;
-            }
-            catch (Exception error)
-            {
-                _eventHandler.OnError(new RelayException(RelayErrorCode.InitializationFailed, error));
-            }
-
             // Request initialization
             var deferred = new RelayDeferredTransaction(_options.transactionTimeout);
             var deferredTask = _transactionManager.WaitFor(deferred);
